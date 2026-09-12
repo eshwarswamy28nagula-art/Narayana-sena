@@ -22,6 +22,8 @@ playwright install chromium
 
 Use `http://127.0.0.1:5050/health` to confirm the backend is running. It should return `{ "ok": true, "service": "waypoint", "demo": true }`.
 
+The generic agent contract is available at `POST /api/agent` with `{ "command": "Find B.Tech CSE fee structure" }`. The older `POST /api/run` route remains supported for compatibility with the existing dashboard.
+
 The app stores task history, preferences, strategies, and feedback in the local SQLite database `waypoint.db`. An existing `memory.json` is imported once for backward compatibility. Local state files are intentionally not committed.
 
 ## Demo flow

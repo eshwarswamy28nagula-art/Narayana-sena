@@ -6,9 +6,11 @@ import time
 import uuid
 from difflib import SequenceMatcher
 from datetime import datetime, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
-from urllib.request import urlopen
+from urllib.parse import quote_plus
+from urllib.request import Request, urlopen
 
 from flask import Flask, jsonify, render_template, request
 from database import load_memory, save_memory
@@ -34,6 +36,48 @@ SECTION_DATA: dict[str, dict[str, Any]] = {
     "contact": {"label": "Contact", "changed_label": "Get in Touch", "aliases": ["contact", "phone", "email", "address", "reach"], "required": ["phone", "email", "address"], "answer": "You can contact Northstar University at +91 80 4000 1234 or admissions@northstar.example. The campus is at 14 University Road, Bengaluru 560001."},
     "about": {"label": "About", "aliases": ["college", "institute", "institution overview"], "required": ["institution overview", "location"], "answer": "Northstar University is a technology-focused institution offering undergraduate engineering programs, student support services, and research opportunities in Bengaluru."},
 }
+
+
+class SearchResultParser(HTMLParser):
+    """Small, dependency-free parser for optional public search fallback."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.results: list[dict[str, str]] = []
+        self._current: dict[str, str] | None = None
+        self._capture: str | None = None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        href = attributes.get("href") or ""
+        if tag == "a" and "result__a" in (attributes.get("class") or ""):
+            self._current = {"title": "", "url": href, "description": ""}
+            self._capture = "title"
+        elif tag == "a" and self._current is not None and "result__snippet" in (attributes.get("class") or ""):
+            self._capture = "description"
+
+    def handle_data(self, data: str) -> None:
+        if self._current is not None and self._capture:
+            self._current[self._capture] += data.strip() + " "
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "a" and self._current is not None and self._capture == "description":
+            self.results.append({key: value.strip() for key, value in self._current.items()})
+            self._current = None
+            self._capture = None
+
+
+def search_public_web(query: str) -> list[dict[str, str]]:
+    """Use DuckDuckGo HTML only as an optional, permitted public fallback."""
+    try:
+        url = f"https://html.duckduckgo.com/html/?q={quote_plus(query)}"
+        request = Request(url, headers={"User-Agent": "Waypoint/1.0 research demo"})
+        with urlopen(request, timeout=5) as response:
+            parser = SearchResultParser()
+            parser.feed(response.read().decode("utf-8", errors="replace"))
+            return parser.results[:5]
+    except Exception:
+        return []
 
 
 def now_iso() -> str:
@@ -175,13 +219,30 @@ def build_result(command: str, changed: bool, memory: dict[str, Any]) -> dict[st
     preference = extract_preference(command)
     if preference and preference not in memory["preferences"]:
         memory["preferences"].insert(0, preference)
+    sources: list[dict[str, str]] = []
+    memory_used = list(memory.get("preferences", []))[:3] + list(memory.get("strategies", []))[:2]
     if not goal["section"]:
-        answer = "I couldn't find that information on the current website. I searched the campus home page and checked the available navigation sections."
-        pages, browser_logs, adapted = [demo_page_url("home", changed)], ["No relevant section matched the request."], False
+        query = command.strip()
+        search_results = search_public_web(query)
+        pages = [demo_page_url("home", changed)]
+        browser_logs = ["No relevant local section matched the request.", "Searching permitted public sources..."]
+        adapted = False
+        if search_results:
+            sources = search_results
+            answer = "Public search results found for this request: " + " ".join(result["title"] for result in search_results[:3]) + ". Review the listed sources before relying on them."
+            browser_logs.append(f"Found {len(search_results)} public search results.")
+        else:
+            answer = "I couldn't find that information on the current website or in the permitted public search fallback."
     else:
         page_text, browser_logs, adapted, pages = read_demo_page(goal, changed)
         selected_sections = goal.get("sections") or [goal["section"]]
-        answer = " ".join(SECTION_DATA[key]["answer"] for key in selected_sections)
+        relevant_text = page_text.lower()
+        relevant_sections = [key for key in selected_sections if any(term in relevant_text for term in SECTION_DATA[key]["required"] + SECTION_DATA[key]["aliases"])]
+        if not relevant_sections:
+            answer = "I couldn't validate relevant information on the pages I visited."
+        else:
+            answer = " ".join(SECTION_DATA[key]["answer"] for key in relevant_sections)
+            sources = [{"title": SECTION_DATA[key]["label"], "url": pages[index + 1] if index + 1 < len(pages) else pages[0], "description": "Relevant section from the controlled Northstar campus website."} for index, key in enumerate(relevant_sections)]
         if any(word in " ".join(memory.get("preferences", [])).lower() for word in ("short", "simple", "brief", "focused")):
             answer = answer.split(". ")[0].rstrip(".") + "."
     logs.extend({"label": message, "detail": "", "state": "done"} for message in browser_logs)
@@ -198,14 +259,18 @@ def build_result(command: str, changed: bool, memory: dict[str, Any]) -> dict[st
     selected_sections = goal.get("sections") or ([goal["section"]] if goal.get("section") else [])
     navigation_actions = [f"Navigate to {SECTION_DATA[key]['label']}" for key in selected_sections]
     actions = ["Open website", "Inspect headings and links", "Score semantic candidates", *navigation_actions, "Read page", "Extract answer"]
-    task = {"id": str(uuid.uuid4())[:8], "command": command, "goal": goal, "answer": answer, "pages": pages, "actions": actions, "adapted": adapted, "recovery_attempts": 1 if adapted else 0, "duration_ms": round((time.perf_counter() - started) * 1000), "created_at": now_iso()}
+    adaptations = []
+    if adapted:
+        section = SECTION_DATA[goal["section"]]
+        adaptations.append({"expected": section["label"], "found": section.get("changed_label", section["label"]), "strategy": "Semantic element matching"})
+    task = {"id": str(uuid.uuid4())[:8], "command": command, "goal": goal, "answer": answer, "sources": sources, "pages": pages, "pages_visited": pages, "actions": actions, "adaptations": adaptations, "memory_used": memory_used, "adapted": adapted, "recovery_attempts": 1 if adapted else 0, "duration_ms": round((time.perf_counter() - started) * 1000), "created_at": now_iso()}
     memory["history"].insert(0, task)
     memory["history"] = memory["history"][:12]
     if adapted and "Use semantic labels when navigation changes." not in memory["strategies"]:
         memory["strategies"].append("Use semantic labels when navigation changes.")
     LAST_CONTEXT = {"command": command, "goal": goal, "answer": answer}
     save_memory(memory)
-    return {"task": task, "logs": logs, "memory": memory, "goal": goal}
+    return {"success": True, "command": command, "goal": goal["goal"], "intent": goal["intent"], "entities": goal["entities"], "answer": answer, "sources": sources, "pages_visited": pages, "actions": actions, "adaptations": adaptations, "memory_used": memory_used, "task": task, "logs": logs, "memory": memory, "goal_detail": goal}
 
 
 @app.get("/")
@@ -219,6 +284,7 @@ def health():
 
 
 @app.post("/api/run")
+@app.post("/api/agent")
 def run_agent():
     payload = request.get_json(silent=True) or {}
     command = str(payload.get("command", "")).strip()

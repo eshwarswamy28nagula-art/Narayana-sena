@@ -34,7 +34,8 @@ function renderLog(logs) {
 
 function renderResult(task) {
   const adaptation = task.adapted ? 'Semantic recovery completed' : 'None';
-  $('#resultPanel').innerHTML = `<div class="result-top"><div><span class="panel-kicker">04 / RESULT</span><h2>Here’s what I found</h2></div><span class="result-state">TASK COMPLETE</span></div><div class="result-content"><div><small class="result-request">USER REQUEST</small><div class="answer">${escapeHtml(task.answer)}</div></div><div class="result-details"><strong>PAGES VISITED</strong>${Number(task.pages.length) || 0} page(s)<br><strong>ACTIONS PERFORMED</strong>${Number(task.actions.length) || 0}<br><strong>ADAPTATIONS</strong>${adaptation}<br><strong>TIME TAKEN</strong>${Number(task.duration_ms) || 0}ms</div></div>`;
+  const sources = (task.sources || []).map((source) => source.title).join(' · ') || 'Controlled website / no external source';
+  $('#resultPanel').innerHTML = `<div class="result-top"><div><span class="panel-kicker">04 / RESULT</span><h2>Here’s what I found</h2></div><span class="result-state">TASK COMPLETE</span></div><div class="result-content"><div><small class="result-request">USER REQUEST</small><div class="result-request-text">${escapeHtml(task.command)}</div><small class="result-request">ANSWER</small><div class="answer">${escapeHtml(task.answer)}</div><div class="result-details"><strong>SOURCES</strong>${escapeHtml(sources)}</div></div><div class="result-details"><strong>PAGES VISITED</strong>${Number((task.pages || []).length) || 0} page(s)<br><strong>ACTIONS PERFORMED</strong>${Number((task.actions || []).length) || 0}<br><strong>ADAPTATIONS</strong>${adaptation}<br><strong>MEMORY USED</strong>${Number((task.memory_used || []).length) || 0} item(s)<br><strong>TIME TAKEN</strong>${Number(task.duration_ms) || 0}ms</div></div>`;
 }
 
 async function runTask() {
@@ -46,7 +47,7 @@ async function runTask() {
   $('#browserState').textContent = 'Agent is operating';
   $('#browserBody').innerHTML = '<div class="browser-placeholder"><span class="compass">◌</span><strong>Waypoint is opening the site...</strong><span>Inspecting the page structure and finding the right target.</span></div>';
   try {
-    const response = await fetch('/api/run', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({command, changed: $('#changedToggle').checked}) });
+    const response = await fetch('/api/agent', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({command, changed: $('#changedToggle').checked}) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error);
     renderLog(data.logs);
