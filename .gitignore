@@ -48,3 +48,10 @@ benchmarks/datasets/*.json
 !benchmarks/datasets/Stealth_Webcmd.json
 benchmarks/.playwright-cli/
 benchmarks/.playwright/
+
+# Waypoint local demo state
+slab-companion/.venv/
+slab-companion/__pycache__/
+slab-companion/memory.json
+slab-companion/waypoint.db
+slab-companion/waypoint.db-*

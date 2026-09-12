@@ -12,29 +12,24 @@
   "keywords": [
     "webcmd",
     "browser-automation",
-    "cli",
-    "agent-skills"
+    "self-learning"
   ],
-  "skills": "./skills/",
-  "interface": {
-    "displayName": "Webcmd",
-    "shortDescription": "Self-learning browser control for AI agents",
-    "longDescription": "Use Webcmd's bundled webcmd-browser skill from Codex to drive a real browser: inspect, click, type, extract, and capture network calls in authenticated sessions. Webcmd keeps sitemap memory locally so later runs need less exploration. Requires the @agentrhq/webcmd npm CLI.",
-    "developerName": "AgentRHQ",
-    "category": "Developer Tools",
-    "capabilities": [
-      "Instructions",
-      "Browser automation",
-      "Sitemap memory"
-    ],
-    "websiteURL": "https://webcmd.dev/",
-    "defaultPrompt": [
-      "Research agentic browser automation on Hacker News and Reddit, then return a concise comparison with source links.",
-      "Compare MacBook Air M5 prices and availability on Amazon, Walmart, and Best Buy.",
-      "Find and rank today’s most-discussed AI agent launches across Hacker News, Reddit, Product Hunt, and arXiv."
-    ],
-    "brandColor": "#1E88E5",
-    "composerIcon": "./docs/webcmd.svg",
-    "logo": "./docs/webcmd.svg"
-  }
+  "shortDescription": "Self-learning browser control for AI agents",
+  "longDescription": "Use Webcmd's bundled webcmd-browser skill from Codex to drive a real browser: inspect, click, type, extract, and capture network calls in authenticated sessions. Webcmd keeps sitemap memory locally so later runs need less exploration. Requires the @agentrhq/webcmd npm CLI.",
+  "developerName": "AgentRHQ",
+  "category": "Developer Tools",
+  "capabilities": [
+    "Instructions",
+    "Browser automation",
+    "Sitemap memory"
+  ],
+  "websiteURL": "https://webcmd.dev/",
+  "defaultPrompt": [
+    "Research agentic browser automation on Hacker News and Reddit, then return a concise comparison with source links.",
+    "Compare MacBook Air M5 prices and availability on Amazon, Walmart, and Best Buy.",
+    "Find and rank today's most-discussed AI agent launches across Hacker News, Reddit, Product Hunt, and arXiv."
+  ],
+  "brandColor": "#1E88E5",
+  "composerIcon": "./docs/webcmd.svg",
+  "logo": "./docs/webcmd.svg"
 }

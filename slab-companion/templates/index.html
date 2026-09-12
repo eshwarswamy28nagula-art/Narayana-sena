@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Waypoint | AI Web Companion</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">W</span><span>waypoint</span><span class="beta">SLAB 06</span></div>
+      <div class="status"><span class="pulse"></span> Companion ready <span class="divider"></span><span>Local demo mode</span></div>
+    </header>
+
+    <main class="workspace">
+      <section class="intro">
+        <div class="eyebrow">AI WEB COMPANION <span>•</span> LEARN, ADAPT &amp; BROWSE</div>
+        <h1>Make the web feel<br><em>findable.</em></h1>
+        <p>Tell Waypoint what you need. It navigates the complicated parts, explains what it finds, and remembers how you like to work.</p>
+        <div class="intro-actions"><button class="primary" id="startButton">Start a task <span>↗</span></button><button class="text-button" id="exampleButton">Try a campus task <span>→</span></button></div>
+        <div class="trust-row"><span>● Human confirmation required for important actions</span><span>◌ No private accounts accessed</span></div>
+      </section>
+
+      <section class="command-card panel">
+        <div class="panel-heading"><div><span class="panel-kicker">01 / COMMAND</span><h2>What should I find?</h2></div><span class="command-icon">⌁</span></div>
+        <div class="command-input-wrap"><textarea id="commandInput" rows="3">Find the scholarship documents required for students.</textarea><button class="voice-button" id="voiceButton" title="Use voice command" aria-label="Use voice command">◉</button></div>
+        <div class="command-footer"><div class="suggestions"><button data-command="Find the hostel application process.">Hostel process</button><button data-command="Find the exam timetable.">Exam timetable</button><button data-command="Find the B.Tech CSE fee structure.">B.Tech fees</button></div><button class="run-button" id="runButton">Run companion <span>▶</span></button></div>
+        <div class="demo-toggle"><label for="changedToggle"><input type="checkbox" id="changedToggle"> Demo adaptation mode</label><span>Change related navigation labels to test recovery</span></div>
+      </section>
+
+      <section class="main-grid">
+        <div class="browser-column">
+          <div class="section-label"><span>LIVE BROWSER VIEW</span><span id="browserState">Waiting for a task</span></div>
+          <div class="browser-frame panel">
+            <div class="browser-chrome"><div class="traffic"><i></i><i></i><i></i></div><div class="address">demo.northstar.edu / campus</div><span>⋯</span></div>
+            <div class="browser-body" id="browserBody"><div class="browser-placeholder"><span class="compass">◎</span><strong>Your browser view will appear here</strong><span>Waypoint will show each page it visits and the action it is taking.</span></div></div>
+          </div>
+          <div class="activity panel"><div class="section-label"><span>AGENT ACTIVITY</span><span class="live-dot">LIVE</span></div><div id="activityLog" class="activity-log"><div class="empty-log">Start a task to watch the agent work.</div></div></div>
+        </div>
+
+        <aside class="side-column">
+          <div class="memory panel"><div class="panel-heading small"><div><span class="panel-kicker">02 / MEMORY</span><h2>What I’m learning</h2></div><span class="memory-icon">✦</span></div><div id="memoryContent"><div class="memory-item"><span class="memory-badge">NEW</span><strong>Preferences appear here</strong><span>Give feedback after a task and Waypoint will remember it.</span></div><div class="strategy"><span>↳</span><div><small>LAST STRATEGY</small><strong>Start with the relevant campus section.</strong></div></div></div></div>
+          <div class="adaptation panel"><div class="panel-heading small"><div><span class="panel-kicker">03 / ADAPTATION</span><h2>Proof it adapts</h2></div><span class="adapt-icon">↝</span></div><div id="adaptationContent" class="adaptation-empty"><span class="adaptation-ring">↻</span><strong>Run demo mode</strong><span>We’ll intentionally change the site and show the recovery.</span></div></div>
+          <div class="feedback panel"><span class="panel-kicker">TEACH THE COMPANION</span><div class="feedback-row"><input id="feedbackInput" placeholder="Give feedback, e.g. Keep it shorter"><button id="feedbackButton">↗</button></div></div>
+        </aside>
+      </section>
+
+      <section class="result panel" id="resultPanel"><div class="result-top"><div><span class="panel-kicker">04 / RESULT</span><h2>Ready when you are</h2></div><span class="result-state">AWAITING COMMAND</span></div><div class="result-placeholder">Your answer, visited pages, and actions will land here after the companion finishes.</div></section>
+
+      <section class="metrics-row"><div><span>COMPLETED TASKS</span><strong id="metricCompleted">0</strong></div><div><span>ADAPTATION RATE</span><strong id="metricAdapted">0%</strong></div><div><span>ACTIONS TAKEN</span><strong id="metricActions">0</strong></div><div><span>RECOVERIES</span><strong id="metricRecovery">0</strong></div><div><span>AVG TIME</span><strong id="metricAverage">0ms</strong></div></section>
+      <section class="history panel"><div class="panel-heading small"><div><span class="panel-kicker">05 / HISTORY</span><h2>Recent tasks</h2></div><span class="history-icon">↺</span></div><div id="historyList" class="history-list"><span class="empty-log">Completed tasks will appear here.</span></div></section>
+    </main>
+    <footer><span>WAYPOINT / AI WEB COMPANION</span><span>Built for the SLAB Open Agent Track</span></footer>
+  </div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
